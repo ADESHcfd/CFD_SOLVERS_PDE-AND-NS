@@ -1,4 +1,5 @@
 # CFD_SOLVER_DEVELOPMENT 
+
 # CFD From Scratch: 1D Advection, Diffusion & Advection-Diffusion Solvers
 
 A learning-focused repository for developing numerical PDE solvers from first principles using Python.
@@ -268,4 +269,5 @@ Performance comparisons:
 
 ---
 
+# Repository Structure
 # Repository Structure
