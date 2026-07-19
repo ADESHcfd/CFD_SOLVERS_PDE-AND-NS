@@ -1,0 +1,151 @@
+"""
+FTCS Advection Solver with Periodic Boundary Conditions
+Using Ghost Cells
+
+Governing Equation:
+    ∂u/∂t + c ∂u/∂x = 0
+
+Spatial Discretization:
+    Central Difference
+
+Temporal Discretization:
+    Forward Euler (FTCS)
+
+Boundary Conditions:
+    Periodic
+
+Author: Adesh Kanthale
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+# ==========================================================
+# Grid Definition
+# ==========================================================
+
+nx = 100                 # Number of physical cells
+ng = 2                   # Number of ghost cells
+
+xmin = 0.0
+xmax = 1.0
+
+dx = (xmax - xmin) / (nx - 1)
+
+ibegin = ng
+iend = nx + ng - 1
+
+# Grid including ghost cells
+xcoords = xmin + (np.arange(nx + 2 * ng) - ng) * dx
+
+
+# ==========================================================
+# Initial Condition
+# ==========================================================
+
+u = np.zeros(nx + 2 * ng)
+
+# Hat Function
+u[(xcoords >= 1/3) & (xcoords <= 2/3)] = 1.0
+
+# Store initial solution
+uinit = u.copy()
+
+
+# ==========================================================
+# Time-Stepping Parameters
+# ==========================================================
+
+c = 1.0                  # Advection velocity
+co = 0.001               # Courant number
+
+dt = co * dx / c
+
+# Save initial values for plotting
+co_initial = co
+dt_initial = dt
+
+tcurrent = 0.0
+tmax = 1.0
+
+
+# ==========================================================
+# Time Integration Loop
+# ==========================================================
+
+while tcurrent < tmax:
+
+    # Adjust final timestep
+    if tcurrent + dt > tmax:
+
+        dt = tmax - tcurrent
+
+        co = c * dt / dx
+
+    # Allocate new solution array
+    unew = np.zeros(nx + 2 * ng)
+
+    # ------------------------------------------------------
+    # Periodic Boundary Conditions
+    # ------------------------------------------------------
+
+    u[ibegin - 1] = u[iend]
+    u[iend + 1] = u[ibegin]
+
+    # ------------------------------------------------------
+    # FTCS Update
+    # ------------------------------------------------------
+
+    for i in range(ibegin, iend + 1):
+
+        unew[i] = (
+            u[i]
+            - 0.5 * co * (u[i + 1] - u[i - 1])
+        )
+
+    # ------------------------------------------------------
+    # Update Solution
+    # ------------------------------------------------------
+
+    u[:] = unew[:]
+
+    # Advance Time
+    tcurrent += dt
+
+
+# ==========================================================
+# Results
+# ==========================================================
+
+print(f"Simulation completed at t = {tcurrent:.6f}")
+
+plt.figure(figsize=(8, 5))
+
+plt.plot(
+    xcoords[ibegin:iend + 1],
+    uinit[ibegin:iend + 1],
+    label="Initial Condition",
+    linewidth=2
+)
+
+plt.plot(
+    xcoords[ibegin:iend + 1],
+    u[ibegin:iend + 1],
+    label="Final Solution",
+    linewidth=2
+)
+
+plt.xlabel("x")
+plt.ylabel("u")
+
+plt.title(
+    f"FTCS Advection with Periodic BC (Ghost Cells)\n"
+    f"Co = {co_initial:.4f}, dt = {dt_initial:.6e}"
+)
+
+plt.legend()
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
